@@ -5,17 +5,16 @@ const config = new pulumi.Config();
 const location = "WestEurope";
 
 const resourceGroup = new azure_native.resources.ResourceGroup("efrg", {
-  resourceGroupName: "efrg",
   location: location,
 });
 
 const storageAccount = new azure_native.storage.StorageAccount("efsa", {
   resourceGroupName: resourceGroup.name,
-  accountName: "efsa",
-  kind: "StorageV2",
   sku: {
     name: "Standard_LRS",
   },
+  kind: "StorageV2",
+  location: location,
 });
 
 const storageAccountKeys = pulumi
@@ -28,8 +27,8 @@ const storageAccountKeys = pulumi
   });
 
 const appServicePlan = new azure_native.web.AppServicePlan("efasp", {
+  location: location,
   resourceGroupName: resourceGroup.name,
-  name: "efasp",
   kind: "Linux",
   reserved: true,
   sku: {
@@ -39,8 +38,8 @@ const appServicePlan = new azure_native.web.AppServicePlan("efasp", {
 });
 
 const app = new azure_native.web.WebApp("efwa", {
+  location: location,
   resourceGroupName: resourceGroup.name,
-  name: "efwa",
   serverFarmId: appServicePlan.id,
   siteConfig: {
     alwaysOn: false,
@@ -49,7 +48,7 @@ const app = new azure_native.web.WebApp("efwa", {
   },
 });
 
-const appSettings = new azure_native.web.WebAppApplicationSettings("efwas", {
+new azure_native.web.WebAppApplicationSettings("efwaas", {
   name: app.name,
   resourceGroupName: resourceGroup.name,
   properties: {
@@ -59,8 +58,7 @@ const appSettings = new azure_native.web.WebAppApplicationSettings("efwas", {
       ";AccountKey=" +
       storageAccountKeys.keys[0].value +
       ";EndpointSuffix=core.windows.net",
-    CONTAINER: "efcontainer",
-    API_KEY: config.requireSecret("API_KEY"),
+    CONTAINER: "mycontainer",
     PORT: "3000",
   },
 });

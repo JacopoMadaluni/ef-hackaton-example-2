@@ -38,22 +38,6 @@ router.use("/", (req, _, next) => {
   return next();
 });
 
-// Setup authorization middleware
-router.use("/internal", (req, res, next) => {
-  const correctApiKey = process.env.API_KEY || "";
-  const apiKey = req.headers["x-api-key"] || "";
-
-  if (!apiKey) {
-    return res.sendStatus(401);
-  }
-
-  if (apiKey === correctApiKey) {
-    next();
-  } else {
-    return res.sendStatus(403);
-  }
-});
-
 router.use(express.json());
 
 router.get("/health", (_, res) => {
