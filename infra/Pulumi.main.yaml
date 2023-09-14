@@ -1,0 +1,6 @@
+config:
+  azure-native:location: UKSouth
+  azure-native:subscriptionId: 08c6c616-de9f-4c52-aaa7-7e0831a0c91b
+
+  azure:location: UKSouth
+  azure:subscriptionId: 08c6c616-de9f-4c52-aaa7-7e0831a0c91b

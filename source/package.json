@@ -1,0 +1,38 @@
+{
+  "name": "test-project",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:AudiogenAI/audiogen-api.git",
+  "author": "JacopoMadaluni <jacopo.madaluni@gmail.com>",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "yarn && node ./src/index.js"
+  },
+  "devDependencies": {
+    "@types/busboy": "^1.5.0",
+    "@types/cors": "^2.8.13",
+    "@types/express": "^4.17.17",
+    "@types/jsonwebtoken": "^9.0.2",
+    "@types/newrelic": "^9.14.0",
+    "@types/node": "^18.15.5",
+    "@types/uuid": "^9.0.1",
+    "ts-node": "^10.9.1",
+    "tsc-alias": "^1.8.6",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^4.9.5"
+  },
+  "dependencies": {
+    "@azure/cosmos": "^3.17.3",
+    "@azure/data-tables": "^13.2.1",
+    "@azure/storage-blob": "^12.13.0",
+    "@optimizely/optimizely-sdk": "^4.9.4",
+    "abort-controller": "^3.0.0",
+    "console-stamp": "^3.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.1",
+    "jszip": "^3.10.1",
+    "uuid": "^9.0.0"
+  }
+}
