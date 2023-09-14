@@ -1,117 +1,62 @@
+
 import * as pulumi from "@pulumi/pulumi";
-import * as azure from "@pulumi/azure";
 import * as azure_native from "@pulumi/azure-native";
-import * as dotenv from "dotenv";
 
-dotenv.config();
+const config = new pulumi.Config();
+const resourceGroup = new azure_native.resources.ResourceGroup("efrg", {
+    location: "WestEurope",
+});
 
-const env = "main"
-
-export = async () => {
-  const resourceGroup = new azure.core.ResourceGroup(
-    "eft-resource-group",
-    {
-      name: "eft-resource-group",
-      location: "UKSouth",
-    }
-  );
-
-  const storageAccount = new azure_native.storage.StorageAccount(
-    "adam-storage-" + env,
-    {
-      kind: "StorageV2",
-      location: "UK South",
-      accountName: "audiogenadamstorage" + env,
-      resourceGroupName: resourceGroup.name,
-      sku: {
+const storageAccount = new azure_native.storage.StorageAccount("efsa", {
+    resourceGroupName: resourceGroup.name,
+    sku: {
         name: "Standard_LRS",
-      },
     },
-    {
-      parent: resourceGroup,
-    }
-  );
+    kind: "StorageV2",
+});
 
-  const container = new azure.storage.Container(
-    "container-" + env,
-    {
-      storageAccountName: storageAccount.name,
-      name: "container",
-      containerAccessType: "private",
-    },
-    {
-      parent: storageAccount,
-    }
-  );
-
-
-  const servicePlan = new azure_native.web.AppServicePlan(
-    "eft-service-plan-" + env,
-    {
-      kind: "Linux",
-      reserved: true,
-      location: "UK South",
-      name: "eft-sp-" + env,
-      resourceGroupName: resourceGroup.name,
-      sku: {
-        name: "B1",
-        capacity: 1,
-        size: "B1",
-        tier: "Basic",
-      },
-    },
-    {
-      parent: resourceGroup,
-    }
-  );
-
-  const appService = new azure_native.web.WebApp(
-    "eft-app-service-" + env,
-    {
-      name: "eft-as-" + env,
-      resourceGroupName: resourceGroup.name,
-      serverFarmId: servicePlan.id,
-      siteConfig: {
-        alwaysOn: true,
-        nodeVersion: "18.14.2",
-        linuxFxVersion: "Node|18",
-      },
-    },
-    {
-      parent: servicePlan,
-    }
-  );
-
-  const storageAccountKeys = pulumi
+const storageAccountKeys = pulumi
     .all([storageAccount.name, resourceGroup.name])
     .apply(async ([accountName, resourceGroupName]) => {
-      return await azure_native.storage.listStorageAccountKeys({
-        accountName,
-        resourceGroupName,
-      });
+        return await azure_native.storage.listStorageAccountKeys({
+            accountName,
+            resourceGroupName,
+        });
     });
 
-  const applicationENV = {
-    STORAGE_CONNECTION_STRING:
-      "DefaultEndpointsProtocol=https;AccountName=" +
-      storageAccount.name +
-      ";AccountKey=" +
-      storageAccountKeys.keys[0].value +
-      ";EndpointSuffix=core.windows.net",
-    CONTAINER: container.name,
-    DEBUG: "true",
-  };
-
-  const applicationSettings = new azure_native.web.WebAppApplicationSettings(
-    "eft-application-settings-" + env,
-    {
-      name: appService.name,
-      resourceGroupName: resourceGroup.name,
-      properties: applicationENV,
+const appServicePlan = new azure_native.web.AppServicePlan("efasp", {
+    resourceGroupName: resourceGroup.name,
+    kind: "Linux",
+    reserved: true,
+    sku: {
+        name: "B1",
+        tier: "Basic",
     },
-    {
-      parent: appService,
-    }
-  );
+});
 
-};
+const app = new azure_native.web.WebApp("efapp", {
+    resourceGroupName: resourceGroup.name,
+    serverFarmId: appServicePlan.id,
+    siteConfig: {
+        alwaysOn: false,
+        nodeVersion: "14.15.0",
+        linuxFxVersion: "NODE|14.15.0",
+    },
+});
+
+const appSettings = new azure_native.web.WebAppApplicationSettings("efas", {
+    resourceGroupName: resourceGroup.name,
+    name: app.name,
+    properties: {
+        STORAGE_CONNECTION_STRING: "DefaultEndpointsProtocol=https;AccountName=" +
+            storageAccount.name +
+            ";AccountKey=" +
+            storageAccountKeys.keys[0].value +
+            ";EndpointSuffix=core.windows.net",
+        CONTAINER: "mycontainer",
+        PORT: "3000",
+    },
+});
+
+export const apiAppName = app.name;
+export const apiResourceGroupName = resourceGroup.name;
