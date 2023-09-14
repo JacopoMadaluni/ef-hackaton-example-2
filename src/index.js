@@ -1,4 +1,3 @@
-
 const express = require("express");
 const { Transform } = require("stream");
 const { BlobServiceClient } = require("@azure/storage-blob");
@@ -7,16 +6,9 @@ const { BlobServiceClient } = require("@azure/storage-blob");
 //   process.env.STORAGE_CONNECTION_STRING || ""
 // );
 
-// const container = blobClient.getContainerClient(
-//   process.env.CONTAINER || ""
-// );
+// const container = blobClient.getContainerClient(process.env.CONTAINER || "");
 
-const uploadFile = async ({
-  filename,
-  stream,
-  containerName,
-}) => {
-
+const uploadFile = async ({ filename, stream, containerName }) => {
   const defaultBufferSize = 4 * 1024 * 1024; // 4MB
   const blockBlobClient = container.getBlockBlobClient(filename);
 
@@ -36,8 +28,8 @@ const uploadFile = async ({
 };
 
 const generate = () => {
-  return { result: "testing" }
-}
+  return { result: "testing" };
+};
 
 const router = express();
 
@@ -62,94 +54,85 @@ router.use("/internal", (req, res, next) => {
   }
 });
 
-
 router.use(express.json());
 
 router.get("/health", (_, res) => {
   res.status(200).send("Healthy");
 });
 
-router.post(
-  "/internal/bot/generate",
-  async (req, res, next) => {
-    try {
-      const body = req.body;
-      const { prompt, callerId } = body;
-      if (!prompt || !callerId) {
-        throw new Error("error");
-      }
-      const { result } = generate();
-
-      if (!result) {
-        res.sendStatus(400);
-      } else {
-        const chunks = [];
-
-        const collectAndPipe = new Transform({
-          transform(chunk, _, callback) {
-            // Cache the chunks
-            chunks.push(chunk);
-            this.push(chunk);
-            callback();
-          },
-        });
-
-        // Load zip data into JSZip while streaming response
-        result.body
-          .pipe(collectAndPipe)
-          .pipe(res)
-          .on("finish", async () => {
-            res.end();
-          });
-      }
-    } catch (err) {
-      next(err);
+router.post("/internal/bot/generate", async (req, res, next) => {
+  try {
+    const body = req.body;
+    const { prompt, callerId } = body;
+    if (!prompt || !callerId) {
+      throw new Error("error");
     }
-  }
-);
+    const { result } = generate();
 
-router.post(
-  "/private/app/generate",
-  async (req, res, next) => {
-    try {
-      const body = req.body;
-      const callerId = (req.locals)
-        .callerId;
-      const { prompt, duration } = body;
+    if (!result) {
+      res.sendStatus(400);
+    } else {
+      const chunks = [];
 
-      if (!prompt || !duration) {
-        throw new Error("error");
-      }
-      const { result } = generate();
+      const collectAndPipe = new Transform({
+        transform(chunk, _, callback) {
+          // Cache the chunks
+          chunks.push(chunk);
+          this.push(chunk);
+          callback();
+        },
+      });
 
-      if (!result) {
-        res.sendStatus(400);
-      } else {
-        const chunks = [];
-
-        const collectAndPipe = new Transform({
-          transform(chunk, _, callback) {
-            // Cache the chunks
-            chunks.push(chunk);
-            this.push(chunk);
-            callback();
-          },
+      // Load zip data into JSZip while streaming response
+      result.body
+        .pipe(collectAndPipe)
+        .pipe(res)
+        .on("finish", async () => {
+          res.end();
         });
-
-        // Load zip data into JSZip while streaming response
-        result.body
-          .pipe(collectAndPipe)
-          .pipe(res)
-          .on("finish", async () => {
-            res.end();
-          });
-      }
-    } catch (err) {
-      next(err);
     }
+  } catch (err) {
+    next(err);
   }
-);
+});
 
+router.post("/private/app/generate", async (req, res, next) => {
+  try {
+    const body = req.body;
+    const callerId = req.locals.callerId;
+    const { prompt, duration } = body;
+
+    if (!prompt || !duration) {
+      throw new Error("error");
+    }
+    const { result } = generate();
+
+    if (!result) {
+      res.sendStatus(400);
+    } else {
+      const chunks = [];
+
+      const collectAndPipe = new Transform({
+        transform(chunk, _, callback) {
+          // Cache the chunks
+          chunks.push(chunk);
+          this.push(chunk);
+          callback();
+        },
+      });
+
+      // Load zip data into JSZip while streaming response
+      result.body
+        .pipe(collectAndPipe)
+        .pipe(res)
+        .on("finish", async () => {
+          res.end();
+        });
+    }
+  } catch (err) {
+    next(err);
+  }
+});
 
 router.post("/public/upload", async (req, res, next) => {
   const _rawFilename = req.query.filename;
@@ -175,9 +158,8 @@ router.post("/public/upload", async (req, res, next) => {
 });
 
 router.get("/test", (req, res) => {
-  res.status(200).send({ dai: "cazzo" })
-})
-
+  res.status(200).send({ health: "good" });
+});
 
 router.listen(process.env.PORT || 3000, () => {
   console.info(
