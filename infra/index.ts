@@ -5,16 +5,13 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 
-const env = "main"
+const env = "main";
 
 export = async () => {
-  const resourceGroup = new azure.core.ResourceGroup(
-    "eft-resource-group",
-    {
-      name: "eft-resource-group",
-      location: "UKSouth",
-    }
-  );
+  const resourceGroup = new azure.core.ResourceGroup("eft-resource-group", {
+    name: "eft-resource-group",
+    location: "UKSouth",
+  });
 
   const storageAccount = new azure_native.storage.StorageAccount(
     "adam-storage-" + env,
@@ -44,7 +41,6 @@ export = async () => {
     }
   );
 
-
   const servicePlan = new azure_native.web.AppServicePlan(
     "eft-service-plan-" + env,
     {
@@ -73,8 +69,8 @@ export = async () => {
       serverFarmId: servicePlan.id,
       siteConfig: {
         alwaysOn: true,
-        nodeVersion: "18.14.2",
-        linuxFxVersion: "Node|18",
+        nodeVersion: "16.8.0",
+        linuxFxVersion: "Node|16",
       },
     },
     {
@@ -114,4 +110,8 @@ export = async () => {
     }
   );
 
+  return {
+    apiAppName: appService.name,
+    apiResourceGroupName: resourceGroup.name,
+  };
 };

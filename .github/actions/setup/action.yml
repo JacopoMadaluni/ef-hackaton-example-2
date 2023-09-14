@@ -1,0 +1,11 @@
+name: Setup ubuntu
+description: |
+  A composite setup the container
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Node.js version
+      uses: actions/setup-node@v1
+      with:
+        node-version: "18.x"
